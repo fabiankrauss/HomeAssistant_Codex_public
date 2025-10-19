@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Lovelace Pop-up Grid Builder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+        background: var(--background, #f6f7fb);
+        color: var(--foreground, #1b1b1f);
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(160deg, #f4f5ff 0%, #f8fbff 45%, #eef4ff 100%);
+        min-height: 100vh;
+      }
+
+      header {
+        padding: 2.5rem 1.5rem 1rem;
+        text-align: center;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 2.8rem);
+        color: #2d3e78;
+        letter-spacing: 0.02em;
+      }
+
+      header p {
+        margin: 0.75rem auto 0;
+        max-width: 70ch;
+        color: #465782;
+        line-height: 1.5;
+      }
+
+      main {
+        max-width: 1200px;
+        margin: 0 auto 4rem;
+        padding: 0 1.5rem 4rem;
+        display: grid;
+        gap: 2rem;
+      }
+
+      .panel {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 20px 40px rgba(38, 59, 94, 0.12);
+        border-radius: 24px;
+        padding: 2rem;
+        border: 1px solid rgba(65, 91, 140, 0.08);
+      }
+
+      .panel h2 {
+        margin-top: 0;
+        font-size: 1.4rem;
+        color: #2d3e78;
+      }
+
+      .grid-form {
+        display: grid;
+        gap: 1.5rem;
+      }
+
+      .field-group {
+        display: grid;
+        gap: 0.6rem;
+      }
+
+      .field-group label {
+        font-weight: 600;
+        color: #243564;
+      }
+
+      textarea,
+      input,
+      select {
+        font: inherit;
+        padding: 0.75rem 1rem;
+        border-radius: 14px;
+        border: 1px solid rgba(60, 90, 140, 0.18);
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: inset 0 1px 2px rgba(30, 50, 80, 0.08);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      textarea:focus,
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #567dff;
+        box-shadow: 0 0 0 3px rgba(86, 125, 255, 0.15);
+      }
+
+      textarea {
+        min-height: 220px;
+        resize: vertical;
+        line-height: 1.4;
+        font-family: "Fira Code", "SFMono-Regular", Consolas, monospace;
+      }
+
+      .options-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        justify-content: flex-end;
+      }
+
+      button {
+        font: inherit;
+        border-radius: 999px;
+        border: none;
+        padding: 0.75rem 1.6rem;
+        cursor: pointer;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        transition: transform 0.15s ease, box-shadow 0.2s ease;
+      }
+
+      button.primary {
+        background: linear-gradient(120deg, #4f7df5, #6f9dff);
+        color: white;
+        box-shadow: 0 12px 22px rgba(79, 125, 245, 0.28);
+      }
+
+      button.secondary {
+        background: rgba(79, 125, 245, 0.1);
+        color: #1f2d52;
+        border: 1px solid rgba(79, 125, 245, 0.2);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      button:not(:disabled):hover {
+        transform: translateY(-1px);
+      }
+
+      .output-panel textarea {
+        min-height: 260px;
+      }
+
+      .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+      }
+
+      .report-table th,
+      .report-table td {
+        text-align: left;
+        padding: 0.6rem 0.4rem;
+        border-bottom: 1px solid rgba(60, 90, 140, 0.1);
+        font-size: 0.95rem;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 0.15rem 0.6rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: rgba(79, 125, 245, 0.14);
+        color: #2d3e78;
+        margin-left: 0.3rem;
+      }
+
+      .status {
+        min-height: 1.5rem;
+        font-size: 0.95rem;
+        color: #2a3a66;
+      }
+
+      footer {
+        padding: 2rem 1.5rem 3rem;
+        text-align: center;
+        color: #5c6fa5;
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 860px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Lovelace Pop-up Grid Builder</h1>
+      <p>
+        Paste your existing Lovelace grid YAML, the list of rooms, and the pop-up template. The
+        tool will update or append pop-up stacks per room and provide the refreshed YAML ready to
+        paste back into Home Assistant.
+      </p>
+    </header>
+    <main>
+      <section class="panel">
+        <h2>Inputs</h2>
+        <form class="grid-form" id="grid-form">
+          <div class="field-group">
+            <label for="grid-input">Current grid YAML</label>
+            <textarea id="grid-input" spellcheck="false" placeholder="type: grid\ncards:\n  - ..."></textarea>
+          </div>
+          <div class="field-group">
+            <label for="rooms-input">Rooms list (JSON array)</label>
+            <textarea id="rooms-input" spellcheck="false" placeholder='["Wohnzimmer", "Küche"]'></textarea>
+          </div>
+          <div class="field-group">
+            <label for="template-input">Pop-up template YAML</label>
+            <textarea id="template-input" spellcheck="false"></textarea>
+          </div>
+          <div class="options-row">
+            <label>
+              Detection strategy
+              <select id="detect-select">
+                <option value="name">Name</option>
+                <option value="hash">Hash</option>
+                <option value="area">Area</option>
+              </select>
+            </label>
+            <label>
+              Insert mode
+              <select id="insert-select">
+                <option value="append">Append</option>
+                <option value="keep-index">Keep index</option>
+              </select>
+            </label>
+            <label>
+              YAML indent
+              <input type="number" id="indent-input" min="0" max="8" value="2" />
+            </label>
+            <label>
+              Icon map (JSON, optional)
+              <input
+                type="text"
+                id="icon-input"
+                placeholder='{"Wohnzimmer":"mdi:sofa"}'
+                spellcheck="false"
+              />
+            </label>
+          </div>
+          <div class="actions">
+            <button type="button" class="secondary" id="load-example">Load example</button>
+            <button type="submit" class="primary" id="process-btn">Generate pop-ups</button>
+          </div>
+          <div class="status" id="status"></div>
+        </form>
+      </section>
+      <section class="panel output-panel">
+        <h2>Updated grid YAML</h2>
+        <textarea id="output" readonly spellcheck="false"></textarea>
+        <div class="actions">
+          <button type="button" class="secondary" id="copy-btn">Copy YAML</button>
+          <button type="button" class="secondary" id="download-btn">Download YAML</button>
+        </div>
+        <table class="report-table" id="report-table" hidden>
+          <thead>
+            <tr>
+              <th>Room</th>
+              <th>Area ID</th>
+              <th>Action</th>
+              <th>Index</th>
+              <th>Duplicates</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </main>
+    <footer>
+      Works entirely in the browser. Save this file together with <code>popup_tool.js</code> and
+      <code>popup_tool.ts</code> to reuse or customise the logic offline.
+    </footer>
+    <script type="module">
+      import { processGrid } from "./popup_tool.js";
+
+      const form = /** @type {HTMLFormElement | null} */ (document.querySelector("#grid-form"));
+      const status = /** @type {HTMLDivElement | null} */ (document.querySelector("#status"));
+      const output = /** @type {HTMLTextAreaElement | null} */ (document.querySelector("#output"));
+      const detectSelect = /** @type {HTMLSelectElement | null} */ (
+        document.querySelector("#detect-select")
+      );
+      const insertSelect = /** @type {HTMLSelectElement | null} */ (
+        document.querySelector("#insert-select")
+      );
+      const indentInput = /** @type {HTMLInputElement | null} */ (document.querySelector("#indent-input"));
+      const iconInput = /** @type {HTMLInputElement | null} */ (document.querySelector("#icon-input"));
+      const copyBtn = /** @type {HTMLButtonElement | null} */ (document.querySelector("#copy-btn"));
+      const downloadBtn = /** @type {HTMLButtonElement | null} */ (document.querySelector("#download-btn"));
+      const loadExampleBtn = /** @type {HTMLButtonElement | null} */ (document.querySelector("#load-example"));
+      const reportTable = /** @type {HTMLTableElement | null} */ (document.querySelector("#report-table"));
+      const reportBody = reportTable ? reportTable.querySelector("tbody") : null;
+
+      const popupTemplatePlaceholder = `type: vertical-stack\ntitle: "__AREA_NAME__"\ncards:\n  - type: custom:bubble-card\n    card_type: pop-up\n    hash: "__HASH__"\n    button_type: name\n    name: "__AREA_NAME__"\n    icon: "__ICON__"\n    sub_button: []\n`;
+
+      const exampleGrid = `type: grid\ncards:\n  - type: vertical-stack\n    cards:\n      - type: custom:bubble-card\n        card_type: pop-up\n        name: Wohnzimmer\n        hash: #wohnzimmer-popup\n        sub_button: []\n  - type: picture\n    image: /local/example.jpg\n`;
+
+      const exampleRooms = `[
+  "Wohnzimmer",
+  "Küche"
+]`;
+
+      function showStatus(message, isError = false) {
+        if (!status) return;
+        status.textContent = message;
+        status.style.color = isError ? "#b9383d" : "#2a3a66";
+      }
+
+      function parseIconMap() {
+        if (!iconInput) return null;
+        const value = iconInput.value.trim();
+        if (!value) return null;
+        try {
+          const parsed = JSON.parse(value);
+          if (parsed && typeof parsed === "object") {
+            return parsed;
+          }
+          throw new Error("Icon map must be a JSON object");
+        } catch (error) {
+          throw new Error("Icon map JSON is invalid");
+        }
+      }
+
+      function populateReport(rows) {
+        if (!reportTable || !reportBody) return;
+        if (rows.length === 0) {
+          reportTable.hidden = true;
+          reportBody.innerHTML = "";
+          return;
+        }
+        reportTable.hidden = false;
+        reportBody.innerHTML = rows
+          .map(
+            (entry) => `
+              <tr>
+                <td>${entry.room}</td>
+                <td>${entry.areaId}</td>
+                <td>${entry.action}</td>
+                <td>${entry.index}</td>
+                <td>${entry.duplicates.length > 0 ? entry.duplicates.join(", ") : "–"}</td>
+              </tr>
+            `,
+          )
+          .join("\n");
+      }
+
+      function handleSubmit(event) {
+        event.preventDefault();
+        if (!form || !output || !detectSelect || !insertSelect || !indentInput) {
+          return;
+        }
+        showStatus("Processing…");
+        try {
+          const iconMap = parseIconMap();
+          const { yaml, report } = processGrid(
+            (document.querySelector("#grid-input")?.value ?? "").trim(),
+            (document.querySelector("#rooms-input")?.value ?? "").trim(),
+            (document.querySelector("#template-input")?.value ?? "").trim(),
+            {
+              detectBy: detectSelect.value,
+              insertMode: insertSelect.value,
+              indent: Number.parseInt(indentInput.value || "2", 10) || 2,
+              iconMap,
+            },
+          );
+          output.value = yaml;
+          populateReport(report);
+          showStatus(`Updated ${report.length} room${report.length === 1 ? "" : "s"}.`);
+        } catch (error) {
+          populateReport([]);
+          showStatus(error instanceof Error ? error.message : String(error), true);
+        }
+      }
+
+      async function handleCopy() {
+        if (!output) return;
+        try {
+          await navigator.clipboard.writeText(output.value);
+          showStatus("Copied to clipboard");
+        } catch (error) {
+          showStatus("Clipboard copy failed: " + (error instanceof Error ? error.message : error), true);
+        }
+      }
+
+      function handleDownload() {
+        if (!output) return;
+        const blob = new Blob([output.value], { type: "text/yaml" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "lovelace-grid.yaml";
+        document.body.appendChild(link);
+        link.click();
+        requestAnimationFrame(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        });
+      }
+
+      function handleLoadExample() {
+        const gridField = document.querySelector("#grid-input");
+        const roomsField = document.querySelector("#rooms-input");
+        const templateField = document.querySelector("#template-input");
+        if (gridField && !gridField.value) {
+          gridField.value = exampleGrid;
+        }
+        if (roomsField && !roomsField.value) {
+          roomsField.value = exampleRooms;
+        }
+        if (templateField && !templateField.value) {
+          templateField.value = popupTemplatePlaceholder;
+        }
+        showStatus("Loaded example snippets. Paste your own to override.");
+      }
+
+      form?.addEventListener("submit", handleSubmit);
+      copyBtn?.addEventListener("click", handleCopy);
+      downloadBtn?.addEventListener("click", handleDownload);
+      loadExampleBtn?.addEventListener("click", handleLoadExample);
+
+      const templateField = /** @type {HTMLTextAreaElement | null} */ (
+        document.querySelector("#template-input")
+      );
+      if (templateField && templateField.value.trim() === "") {
+        templateField.value = popupTemplatePlaceholder;
+      }
+    </script>
+  </body>
+</html>

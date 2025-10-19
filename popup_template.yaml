@@ -1,0 +1,248 @@
+type: vertical-stack
+title: "__AREA_NAME__"
+cards:
+  # ===== HEADER =====
+  - type: custom:bubble-card
+    card_type: pop-up
+    hash: "__HASH__"
+    button_type: name
+    name: "__AREA_NAME__"
+    icon: "__ICON__"   # optional placeholder; falls kein Icon-Mapping genutzt wird, kann diese Zeile später entfernt/ignoriert werden
+    sub_button: []
+
+  # ===== LAMPEN =====
+  - type: custom:bubble-card
+    card_type: separator
+    name: Lampen
+    icon: mdi:lamps-outline
+    sub_button:
+      - icon: mdi:led-on
+        tap_action:
+          action: perform-action
+          perform_action: light.turn_on
+          target: { area_id: __AREA_ID__ }
+      - icon: mdi:led-variant-off
+        tap_action:
+          action: perform-action
+          perform_action: light.turn_off
+          target: { area_id: __AREA_ID__ }
+
+  - type: custom:auto-entities
+    show_empty: false
+    card: { type: grid, square: false, columns: 1 }
+    card_param: cards
+    filter:
+      include:
+        - domain: light
+          area: __AREA_ID__
+          options:
+            type: tile
+            features_position: inline
+            vertical: false
+            state_content: last_changed
+            features:
+              - type: light-brightness
+          sort: { method: last_changed, reverse: true }
+      exclude:
+        - label: no_dboard
+          options: {}
+
+  # ===== ROLLOS (Shutter) =====
+  - type: custom:bubble-card
+    card_type: separator
+    name: Rollos
+    icon: mdi:window-shutter
+    sub_button:
+      - icon: mdi:arrow-up-bold-circle-outline
+        tap_action:
+          action: perform-action
+          perform_action: cover.open_cover
+          target: { area_id: __AREA_ID__ }
+      - icon: mdi:arrow-down-bold-circle-outline
+        tap_action:
+          action: perform-action
+          perform_action: cover.close_cover
+          target: { area_id: __AREA_ID__ }
+
+  - type: custom:auto-entities
+    show_empty: false
+    card: { type: grid, square: false, columns: 1 }
+    card_param: cards
+    filter:
+      include:
+        - domain: cover
+          attributes: { device_class: shutter }
+          area: __AREA_ID__
+          options:
+            type: tile
+            features_position: inline
+            vertical: false
+            features:
+              - type: cover-position
+      exclude: []
+
+  # ===== VORHÄNGE (Curtain) =====
+  - type: custom:auto-entities
+    show_empty: false
+    card: { type: grid, square: false, columns: 1 }
+    card_param: cards
+    filter:
+      include:
+        - domain: cover
+          attributes: { device_class: curtain }
+          area: __AREA_ID__
+          options:
+            type: tile
+            features_position: inline
+            vertical: false
+            features:
+              - type: cover-position
+      exclude: []
+
+  # ===== SZENEN =====
+  - type: custom:bubble-card
+    card_type: separator
+    name: Szenen
+    icon: mdi:projector-screen-variant
+    sub_button: []
+
+  - type: custom:auto-entities
+    show_empty: false
+    card: { type: grid, square: false, columns: 2 }
+    card_param: cards
+    filter:
+      include:
+        - domain: scene
+          area: __AREA_ID__
+          options: { type: tile }
+          sort: { method: last_changed, reverse: true }
+      exclude: []
+
+  # ===== SONSTIGES =====
+  - type: custom:bubble-card
+    card_type: separator
+    name: Sonstiges
+    icon: mdi:bike-pedal-mountain
+    sub_button: []
+
+  # Climate
+  - type: custom:auto-entities
+    show_empty: false
+    card: { type: grid, square: false, columns: 1 }
+    card_param: cards
+    filter:
+      include:
+        - domain: climate
+          area: __AREA_ID__
+          options: { type: tile }
+      exclude: []
+
+  # Media Player
+  - type: custom:auto-entities
+    show_empty: false
+    sort: { method: last_changed, reverse: true }
+    card: { type: grid, square: false, columns: 1 }
+    card_param: cards
+    filter:
+      include:
+        - domain: media_player
+          area: __AREA_ID__
+          options:
+            type: tile
+            features_position: inline
+            features:
+              - type: media-player-volume-slider
+      exclude: []
+
+  # Vacuum (Button-Stil per Bubble-Card)
+  - type: custom:auto-entities
+    show_empty: false
+    card: { type: grid, square: false, columns: 1 }
+    card_param: cards
+    filter:
+      include:
+        - domain: vacuum
+          area: __AREA_ID__
+          options:
+            type: custom:bubble-card
+            card_type: button
+            button_type: switch
+            entity: this.entity_id
+            icon: mdi:robot-vacuum
+            show_state: true
+            tap_action: { action: more-info }
+            button_action: { tap_action: { action: more-info } }
+            sub_button:
+              - name: Battery
+                icon: mdi:battery
+                show_name: false
+                show_icon: true
+                show_background: false
+                show_attribute: true
+                attribute: battery_level
+              - name: Return to dock
+                icon: mdi:home
+                show_background: false
+                tap_action:
+                  action: call-service
+                  service: vacuum.return_to_base
+                  target: { entity_id: this.entity_id }
+              - name: Pause
+                icon: mdi:pause
+                show_background: false
+                tap_action:
+                  action: call-service
+                  service: vacuum.pause
+                  target: { entity_id: this.entity_id }
+              - name: Start
+                icon: mdi:play
+                tap_action:
+                  action: call-service
+                  service: vacuum.start
+                  target: { entity_id: this.entity_id }
+      exclude: []
+
+  # Fans
+  - type: custom:auto-entities
+    show_empty: false
+    card: { type: grid, square: false, columns: 2 }
+    card_param: cards
+    filter:
+      include:
+        - domain: fan
+          area: __AREA_ID__
+          options:
+            type: tile
+            features_position: inline
+            vertical: false
+            state_content: last_changed
+      exclude: []
+
+  # Switches (per Label kuratiert)
+  - type: custom:auto-entities
+    show_empty: false
+    card: { type: grid, square: false, columns: 2 }
+    card_param: cards
+    filter:
+      include:
+        - domain: switch
+          label: show_dboard
+          area: __AREA_ID__
+          options: { type: tile }
+      exclude: []
+
+  # Selects (z. B. WLED Presets) – ebenfalls per Label
+  - type: custom:auto-entities
+    show_empty: false
+    card: { type: grid, square: false, columns: 2 }
+    card_param: cards
+    filter:
+      include:
+        - domain: select
+          label: show_dboard
+          area: __AREA_ID__
+          options:
+            type: tile
+            features_position: bottom
+            features: [{ type: select-options }]
+      exclude: []
